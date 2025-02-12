@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, Ruler, Gauge, Minus, Plus } from 'lucide-react';
 
-type ThreadType = 'UNC' | 'UNF' | 'Metric' | 'BSP' | 'BSPT' | 'BSPP' | 'BSF' | 'BSW' | 'NPTF' | 'NPT' | 'UNS' | 'ACME' | 'Trapezoidal thread (Tr))';
+type ThreadType = 'UNC' | 'UNF' | 'Metric' | 'BSP' | 'BSPT' | 'BSPP' | 'BSF' | 'BSW' | 'NPTF' | 'NPT' | 'UNS' | 'ACME';
 
 interface ThreadData {
   size: string;
@@ -160,7 +160,24 @@ export default function Threads() {
     { type: 'BSPT', size: 'R6" BSPT', tpi: 11, majorDiameter: '163.830mm', minorDiameter: '160.872mm', tapDrill: '161.0mm' }
   ];
 
-  const threadTypes: ThreadType[] = ['UNC', 'UNF', 'UNS', 'Metric', 'BSPP', 'BSPT', 'BSF', 'BSW', 'NPTF', 'NPT', 'ACME', 'Trapezoidal thread (Tr))'];
+  const threadTypes: ThreadType[] = ['UNC', 'UNF', 'UNS', 'Metric', 'BSPP', 'BSPT', 'BSF', 'BSW', 'NPTF', 'NPT', 'ACME'];
+
+  const filteredThreads = threadData.filter(thread => {
+    const searchTerms = searchQuery.toLowerCase().split(' ');
+    const threadInfo = [
+      thread.size.toLowerCase(),
+      thread.majorDiameter.toLowerCase(),
+      thread.minorDiameter.toLowerCase(),
+      thread.type.toLowerCase(),
+      thread.metricSize?.toLowerCase() || '',
+      thread.type === 'Metric' 
+        ? `${thread.pitch}mm pitch`
+        : `${thread.tpi} tpi ${(25.4 / (thread.tpi || 1)).toFixed(2)}mm pitch`,
+      thread.tapDrill.toLowerCase()
+    ].join(' ');
+
+    return searchTerms.every(term => threadInfo.includes(term));
+  });
 
   const renderThreadTable = (threads: ThreadData[]) => (
     <div className="overflow-x-auto">
@@ -398,7 +415,7 @@ export default function Threads() {
                        type === 'NPT' ? 'National Taper Pipe (NPT)' :
                        type === 'UNS' ? 'Unified National Special Thread (UNS)' :
                        type === 'ACME' ? 'ACME General Purpose Thread' :
-                       type}
+                       `${type} Threads`}
                     </span>
                     <ChevronDown
                       className={`w-5 h-5 transform transition-transform ${
@@ -406,14 +423,9 @@ export default function Threads() {
                       }`}
                     />
                   </button>
-                  {expandedType === type && typeThreads.length > 0 && (
+                  {expandedType === type && (
                     <div className="p-4">
                       {renderThreadTable(typeThreads)}
-                    </div>
-                  )}
-                  {expandedType === type && typeThreads.length === 0 && (
-                    <div className="p-4 text-sm text-gray-500">
-                      No thread data available yet
                     </div>
                   )}
                 </div>
